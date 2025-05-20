@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizeriea</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #D9AFD9;
+            background-image: linear-gradient(0deg, #D9AFD9 0%, #97D9E1 100%);
+
+            /* background: ; */
+            color: #fff;
+        }
+        .quiz-container {
+            /* background: rgba(255, 255, 255, 0.9); */
+            background-image: linear-gradient( 90.1deg,  rgba(8,81,98,1) 14.5%, rgba(198,231,249,1) 135.4% );
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            color: #333;
+            position: relative;
+        }
+        header {
+            position: absolute;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+        header h1 {
+            font-size: 2rem;
+            margin: 0;
+            color: #fff;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        header .progress {
+            margin-top: 10px;
+            font-size: 1rem;
+            color: #f1f1f1;
+        }
+        .question {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: rgb(241, 241, 241);
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .options button {
+            padding: 10px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #8f9149;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+        .options button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        .options button:active {
+            transform: scale(0.95);
+        }
+        .feedback {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            transition: transform 0.5s ease, opacity 0.5s ease;
+            z-index: 1000;
+        }
+        .popup.active {
+            display: block;
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Quizeriea</h1>
+        <div class="progress">Question <span id="question-progress">1</span> of <span id="total-questions"></span></div>
+        <div id="timer">Time Left: <span id="time">60</span> seconds</div>
+    </header>
+
+    <div class="quiz-container">
+        <div class="question" id="question">Loading question...</div>
+        <div class="options" id="options"></div>
+        <div class="feedback" id="feedback"></div>
+        <div class="popup" id="final-popup">
+            <h2>Quiz Complete!</h2>
+            <p>Your final score is: <span id="final-score"></span></p>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "What is the capital of France?",
+                options: ["Berlin", "Madrid", "Paris", "Rome"],
+                answer: "Paris"
+            },
+            {
+                question: "What is 2 + 2?",
+                options: ["3", "4", "5", "6"],
+                answer: "4"
+            },
+            {
+                question: "Who wrote 'To Kill a Mockingbird'?",
+                options: ["Harper Lee", "J.K. Rowling", "Ernest Hemingway", "Mark Twain"],
+                answer: "Harper Lee"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timerInterval;
+        let timeLeft = 60;
+
+        document.getElementById("total-questions").textContent = questions.length;
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 60;
+            document.getElementById("time").textContent = timeLeft;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById("time").textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleAnswer(null);
+                }
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            const questionElement = document.getElementById("question");
+            const optionsElement = document.getElementById("options");
+            const feedbackElement = document.getElementById("feedback");
+
+            const currentQuestion = questions[currentQuestionIndex];
+            document.getElementById("question-progress").textContent = currentQuestionIndex + 1;
+
+            questionElement.textContent = currentQuestion.question;
+
+            optionsElement.innerHTML = "";
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement("button");
+                button.textContent = option;
+                button.addEventListener("click", () => handleAnswer(option));
+                optionsElement.appendChild(button);
+            });
+
+            feedbackElement.textContent = "";
+            startTimer();
+        }
+
+        function handleAnswer(selectedOption) {
+            const currentQuestion = questions[currentQuestionIndex];
+            const feedbackElement = document.getElementById("feedback");
+
+            if (selectedOption === currentQuestion.answer) {
+                feedbackElement.textContent = "Correct!";
+                feedbackElement.style.color = "green";
+                score++;
+            } else {
+                feedbackElement.textContent = `Wrong! The correct answer is ${currentQuestion.answer}.`;
+                feedbackElement.style.color = "red";
+            }
+
+            currentQuestionIndex++;
+            clearInterval(timerInterval);
+            if (currentQuestionIndex < questions.length) {
+                setTimeout(() => {
+                    document.querySelector(".quiz-container").style.opacity = "0";
+                    setTimeout(() => {
+                        loadQuestion();
+                        document.querySelector(".quiz-container").style.opacity = "1";
+                    }, 500);
+                }, 2000);
+            } else {
+                setTimeout(showFinalScore, 2000);
+            }
+        }
+
+        function showFinalScore() {
+            const popup = document.getElementById("final-popup");
+            document.getElementById("final-score").textContent = `${score}/${questions.length}`;
+            popup.classList.add("active");
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
